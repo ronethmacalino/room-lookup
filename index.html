@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Room Assignment Lookup</title>
+  <script src="https://unpkg.com/tabletop@1.6.0/tabletop.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      background-color: #f0f0f0;
+      border: none;
+      outline: none;
+    }
+    .tab-button.active {
+      background-color: #007bff;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    input, button {
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+    }
+    #result1, #result2 {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Room Assignment Lookup</h2>
+
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('day1')">ST GILES</button>
+    <button class="tab-button" onclick="showTab('day2')">FOREST CREST</button>
+  </div>
+
+  <!-- ST GILES Tab -->
+  <div id="day1" class="tab-content active">
+    <input type="text" id="nameInput1" placeholder="Enter your name for ST GILES" />
+    <button onclick="findRoom('hotelA')">Check Room</button>
+    <div id="result1">Loading data...</div>
+  </div>
+
+  <!-- FOREST CREST Tab -->
+  <div id="day2" class="tab-content">
+    <input type="text" id="nameInput2" placeholder="Enter your name for FOREST CREST" />
+    <button onclick="findRoom('hotelB')">Check Room</button>
+    <div id="result2">Loading data...</div>
+  </div>
+
+  <script>
+    let hotelA = {};
+    let hotelB = {};
+
+    function init() {
+      Tabletop.init({
+        key: '1y8jMWJb9oxl8pe6nRpHBirOQ6sGQl3DMbeM5mvgWIXc', // Your actual Sheet ID
+        simpleSheet: false,
+        callback: function(data, tabletop) {
+          // ST GILES hotel data
+          hotelA = {};
+          tabletop.sheets("ST GILES").all().forEach(row => {
+            if (row.Name && row.Room) {
+              hotelA[row.Name.trim().toLowerCase()] = row.Room.trim();
+            }
+          });
+
+          // FOREST CREST hotel data
+          hotelB = {};
+          tabletop.sheets("FOREST CREST").all().forEach(row => {
+            if (row.Name && row.Room) {
+              hotelB[row.Name.trim().toLowerCase()] = row.Room.trim();
+            }
+          });
+
+          document.getElementById("result1").textContent = "Ready to search.";
+          document.getElementById("result2").textContent = "Ready to search.";
+        }
+      });
+    }
+
+    function findRoom(hotelKey) {
+      let inputId = hotelKey === 'hotelA' ? 'nameInput1' : 'nameInput2';
+      let resultId = hotelKey === 'hotelA' ? 'result1' : 'result2';
+
+      const name = document.getElementById(inputId).value.trim().toLowerCase();
+      const hotel = hotelKey === 'hotelA' ? hotelA : hotelB;
+      const resultDiv = document.getElementById(resultId);
+
+      if (hotel[name]) {
+        resultDiv.textContent = `Hi ${name}, your room is ${hotel[name]}.`;
+      } else {
+        resultDiv.textContent = `No room found for "${name}".`;
+      }
+    }
+
+    function showTab(tabId) {
+      // Switch tab buttons
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+
+      // Switch content
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+
+</body>
+</html>
