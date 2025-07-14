@@ -71,24 +71,35 @@
     let hotelA = {};
     let hotelB = {};
 
+    // Normalize name: remove punctuation, lowercase, sort words
+    function normalize(name) {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9 ]/g, "") // remove punctuation
+        .split(" ")
+        .filter(Boolean) // remove empty strings
+        .sort()
+        .join(" ");
+    }
+
     function init() {
       Tabletop.init({
-        key: '1y8jMWJb9oxl8pe6nRpHBirOQ6sGQl3DMbeM5mvgWIXc', // Your actual Sheet ID
+        key: '1y8jMWJb9oxl8pe6nRpHBirOQ6sGQl3DMbeM5mvgWIXc',
         simpleSheet: false,
         callback: function(data, tabletop) {
-          // ST GILES hotel data
           hotelA = {};
           tabletop.sheets("ST GILES").all().forEach(row => {
             if (row.Name && row.Room) {
-              hotelA[row.Name.trim().toLowerCase()] = row.Room.trim();
+              const normalized = normalize(row.Name);
+              hotelA[normalized] = row.Room.trim();
             }
           });
 
-          // FOREST CREST hotel data
           hotelB = {};
           tabletop.sheets("FOREST CREST").all().forEach(row => {
             if (row.Name && row.Room) {
-              hotelB[row.Name.trim().toLowerCase()] = row.Room.trim();
+              const normalized = normalize(row.Name);
+              hotelB[normalized] = row.Room.trim();
             }
           });
 
@@ -102,23 +113,22 @@
       let inputId = hotelKey === 'hotelA' ? 'nameInput1' : 'nameInput2';
       let resultId = hotelKey === 'hotelA' ? 'result1' : 'result2';
 
-      const name = document.getElementById(inputId).value.trim().toLowerCase();
+      const userInput = document.getElementById(inputId).value;
+      const normalizedInput = normalize(userInput);
       const hotel = hotelKey === 'hotelA' ? hotelA : hotelB;
       const resultDiv = document.getElementById(resultId);
 
-      if (hotel[name]) {
-        resultDiv.textContent = `Hi ${name}, your room is ${hotel[name]}.`;
+      if (hotel[normalizedInput]) {
+        resultDiv.textContent = `Hi, your room is ${hotel[normalizedInput]}.`;
       } else {
-        resultDiv.textContent = `No room found for "${name}".`;
+        resultDiv.textContent = `No room found for "${userInput}".`;
       }
     }
 
     function showTab(tabId) {
-      // Switch tab buttons
       document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
 
-      // Switch content
       document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
     }
