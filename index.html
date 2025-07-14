@@ -72,10 +72,8 @@
       return name
         .toLowerCase()
         .replace(/[^a-z0-9 ]/g, "")
-        .split(" ")
-        .filter(Boolean)
-        .sort()
-        .join(" ");
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     async function loadData() {
@@ -84,7 +82,7 @@
 
       hotelA = {};
       data["ST GILES"].forEach(row => {
-        if (row["Name (Last, First)"] && row.Room) {
+        if (row["Name (Last, First)"] && row.Room !== undefined) {
           const normalized = normalize(row["Name (Last, First)"]);
           hotelA[normalized] = row.Room;
         }
@@ -92,7 +90,7 @@
 
       hotelB = {};
       data["FOREST CREST"].forEach(row => {
-        if (row["Name (Last, First)"] && row.Room) {
+        if (row["Name (Last, First)"] && row.Room !== undefined) {
           const normalized = normalize(row["Name (Last, First)"]);
           hotelB[normalized] = row.Room;
         }
@@ -111,7 +109,10 @@
       const hotel = hotelKey === 'hotelA' ? hotelA : hotelB;
       const resultDiv = document.getElementById(resultId);
 
-      let foundKey = Object.keys(hotel).find(k => k.includes(normalizedInput));
+      let foundKey = Object.keys(hotel).find(k =>
+        k.includes(normalizedInput) || normalizedInput.includes(k)
+      );
+
       if (foundKey) {
         resultDiv.textContent = `Hi, your room is ${hotel[foundKey]}.`;
       } else {
