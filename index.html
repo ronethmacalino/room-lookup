@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Room Assignment Lookup</title>
-  <script src="https://unpkg.com/tabletop@1.6.0/tabletop.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -79,13 +78,55 @@
         .join(" ");
     }
 
-    function init() {
-      Tabletop.init({
-        key: '1y8jMWJb9oxl8pe6nRpHBirOQ6sGQl3DMbeM5mvgWIXc',
-        simpleSheet: false,
-        callback: function(data, tabletop) {
-          hotelA = {};
-          tabletop.sheets("ST GILES").all().forEach(row => {
-            if (row["Name (Last, First)"] && row.Room) {
-              const normalized = normalize(row["Name (Last, First)"]);
-              hotelA[normalized] = r
+    async function loadData() {
+      const response = await fetch('YOUR_SCRIPT_URL_HERE'); // Replace with your actual Apps Script web app URL
+      const data = await response.json();
+
+      hotelA = {};
+      data["ST GILES"].forEach(row => {
+        if (row["Name (Last, First)"] && row.Room) {
+          const normalized = normalize(row["Name (Last, First)"]);
+          hotelA[normalized] = row.Room;
+        }
+      });
+
+      hotelB = {};
+      data["FOREST CREST"].forEach(row => {
+        if (row["Name (Last, First)"] && row.Room) {
+          const normalized = normalize(row["Name (Last, First)"]);
+          hotelB[normalized] = row.Room;
+        }
+      });
+
+      document.getElementById("result1").textContent = "Ready to search.";
+      document.getElementById("result2").textContent = "Ready to search.";
+    }
+
+    function findRoom(hotelKey) {
+      let inputId = hotelKey === 'hotelA' ? 'nameInput1' : 'nameInput2';
+      let resultId = hotelKey === 'hotelA' ? 'result1' : 'result2';
+
+      const userInput = document.getElementById(inputId).value;
+      const normalizedInput = normalize(userInput);
+      const hotel = hotelKey === 'hotelA' ? hotelA : hotelB;
+      const resultDiv = document.getElementById(resultId);
+
+      if (hotel[normalizedInput]) {
+        resultDiv.textContent = `Hi, your room is ${hotel[normalizedInput]}.`;
+      } else {
+        resultDiv.textContent = `No room found for "${userInput}".`;
+      }
+    }
+
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    window.addEventListener('DOMContentLoaded', loadData);
+  </script>
+</body>
+</html>
