@@ -53,14 +53,12 @@
     <button class="tab-button" onclick="showTab('day2')">FOREST CREST</button>
   </div>
 
-  <!-- ST GILES Tab -->
   <div id="day1" class="tab-content active">
     <input type="text" id="nameInput1" placeholder="Enter your name for ST GILES" />
     <button onclick="findRoom('hotelA')">Check Room</button>
     <div id="result1">Loading data...</div>
   </div>
 
-  <!-- FOREST CREST Tab -->
   <div id="day2" class="tab-content">
     <input type="text" id="nameInput2" placeholder="Enter your name for FOREST CREST" />
     <button onclick="findRoom('hotelB')">Check Room</button>
@@ -71,13 +69,12 @@
     let hotelA = {};
     let hotelB = {};
 
-    // Normalize name: remove punctuation, lowercase, sort words
     function normalize(name) {
       return name
         .toLowerCase()
-        .replace(/[^a-z0-9 ]/g, "") // remove punctuation
+        .replace(/[^a-z0-9 ]/g, "")
         .split(" ")
-        .filter(Boolean) // remove empty strings
+        .filter(Boolean)
         .sort()
         .join(" ");
     }
@@ -89,52 +86,6 @@
         callback: function(data, tabletop) {
           hotelA = {};
           tabletop.sheets("ST GILES").all().forEach(row => {
-            if (row.Name && row.Room) {
-              const normalized = normalize(row.Name);
-              hotelA[normalized] = row.Room.trim();
-            }
-          });
-
-          hotelB = {};
-          tabletop.sheets("FOREST CREST").all().forEach(row => {
-            if (row.Name && row.Room) {
-              const normalized = normalize(row.Name);
-              hotelB[normalized] = row.Room.trim();
-            }
-          });
-
-          document.getElementById("result1").textContent = "Ready to search.";
-          document.getElementById("result2").textContent = "Ready to search.";
-        }
-      });
-    }
-
-    function findRoom(hotelKey) {
-      let inputId = hotelKey === 'hotelA' ? 'nameInput1' : 'nameInput2';
-      let resultId = hotelKey === 'hotelA' ? 'result1' : 'result2';
-
-      const userInput = document.getElementById(inputId).value;
-      const normalizedInput = normalize(userInput);
-      const hotel = hotelKey === 'hotelA' ? hotelA : hotelB;
-      const resultDiv = document.getElementById(resultId);
-
-      if (hotel[normalizedInput]) {
-        resultDiv.textContent = `Hi, your room is ${hotel[normalizedInput]}.`;
-      } else {
-        resultDiv.textContent = `No room found for "${userInput}".`;
-      }
-    }
-
-    function showTab(tabId) {
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-      document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
-
-      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-    }
-
-    window.addEventListener('DOMContentLoaded', init);
-  </script>
-
-</body>
-</html>
+            if (row["Name (Last, First)"] && row.Room) {
+              const normalized = normalize(row["Name (Last, First)"]);
+              hotelA[normalized] = r
