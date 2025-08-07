@@ -92,13 +92,13 @@
       const room17 = row["Aug 16-17"];
 
       if (room14) {
-        hotelA14[normalized] = room14;
+        if (!hotelA14[normalized]) hotelA14[normalized] = room14;
         if (!hotelARoommates14[room14]) hotelARoommates14[room14] = [];
         hotelARoommates14[room14].push(name);
       }
 
       if (room17) {
-        hotelA17[normalized] = room17;
+        if (!hotelA17[normalized]) hotelA17[normalized] = room17;
         if (!hotelARoommates17[room17]) hotelARoommates17[room17] = [];
         hotelARoommates17[room17].push(name);
       }
@@ -111,7 +111,7 @@
       const room = row.Room;
 
       if (room) {
-        hotelB[normalized] = room;
+        if (!hotelB[normalized]) hotelB[normalized] = room;
         if (!hotelBRoommates[room]) hotelBRoommates[room] = [];
         hotelBRoommates[room].push(name);
       }
@@ -129,36 +129,43 @@
     const normalizedInput = normalize(userInput);
     const resultDiv = document.getElementById(resultId);
 
-    if (hotelKey === 'hotelA') {
-      const room14 = hotelA14[normalizedInput];
-      const room17 = hotelA17[normalizedInput];
+    function findMatchingKey(obj) {
+      return Object.keys(obj).find(key => key.includes(normalizedInput));
+    }
 
-      if (!room14 && !room17) {
+    if (hotelKey === 'hotelA') {
+      const matchedKey14 = findMatchingKey(hotelA14);
+      const matchedKey17 = findMatchingKey(hotelA17);
+
+      if (!matchedKey14 && !matchedKey17) {
         resultDiv.textContent = `No room found for "${userInput}".`;
         return;
       }
 
       let message = "";
-      if (room14) {
-        const roommates14 = hotelARoommates14[room14].filter(n => normalize(n) !== normalizedInput);
+      if (matchedKey14) {
+        const room14 = hotelA14[matchedKey14];
+        const roommates14 = hotelARoommates14[room14].filter(n => normalize(n) !== matchedKey14);
         message += `Aug 14-15: ${room14}.`;
         message += roommates14.length > 0 ? ` Roommate(s): ${roommates14.join(", ")}.` : ` You have no listed roommates.`;
       }
 
-      if (room17) {
-        const roommates17 = hotelARoommates17[room17].filter(n => normalize(n) !== normalizedInput);
+      if (matchedKey17) {
+        const room17 = hotelA17[matchedKey17];
+        const roommates17 = hotelARoommates17[room17].filter(n => normalize(n) !== matchedKey17);
         message += `\n\nAug 16-17: ${room17}.`;
         message += roommates17.length > 0 ? ` Roommate(s): ${roommates17.join(", ")}.` : ` You have no listed roommates.`;
       }
 
       resultDiv.textContent = message;
     } else {
-      const room = hotelB[normalizedInput];
-      if (!room) {
+      const matchedKey = findMatchingKey(hotelB);
+      if (!matchedKey) {
         resultDiv.textContent = `No room found for "${userInput}".`;
         return;
       }
-      const roommates = hotelBRoommates[room].filter(n => normalize(n) !== normalizedInput);
+      const room = hotelB[matchedKey];
+      const roommates = hotelBRoommates[room].filter(n => normalize(n) !== matchedKey);
       let message = `Hi, your room is ${room}.`;
       message += roommates.length > 0 ? ` Your roommate${roommates.length > 1 ? 's are' : ' is'} ${roommates.join(", ")}.` : ` You have no listed roommates.`;
       resultDiv.textContent = message;
