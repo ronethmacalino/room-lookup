@@ -2,141 +2,43 @@
 <html>
   <head>
     <base target="_top">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 600px;
+        margin: auto;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      #result {
+        margin-top: 20px;
+        font-size: 16px;
+        white-space: pre-wrap;
+      }
+    </style>
     <script>
-      const normalize = str => str.trim().toLowerCase();
-      const hotelA = {}; // ST GILES Aug 14-15
-      const hotelA2 = {}; // ST GILES Aug 16-17
-      const hotelARoommates = {}; // Aug 14-15 roommates
-      const hotelA2Roommates = {}; // Aug 16-17 roommates
-      const hotelB = {}; // Forest Crest
-      const hotelBRoommates = {}; // Forest Crest roommates
-
-      function parseData(data, target, roommatesMap, colIndex = 1) {
-        for (let i = 1; i < data.length; i++) {
-          const name = data[i][0];
-          const room = data[i][colIndex];
-          if (name && room && room !== '-') {
-            const key = normalize(name);
-            target[key] = room;
-            if (!roommatesMap[room]) roommatesMap[room] = [];
-            roommatesMap[room].push(name);
-          }
-        }
-      }
-
-      function getAssignments() {
-        return google.script.run.withSuccessHandler(showResult).getRoomAssignment(document.getElementById('nameInput').value);
-      }
-
-      function showResult(message) {
-        document.getElementById('result').innerText = message;
+      function getAssignment() {
+        const name = document.getElementById('name').value;
+        google.script.run.withSuccessHandler(function(result) {
+          document.getElementById('result').innerText = result;
+        }).getRoomAssignment(name);
       }
     </script>
   </head>
   <body>
-    <h2>Room Assignment Lookup</h2>
-    <input type="text" id="nameInput" placeholder="Enter your name">
-    <button onclick="getAssignments()">Check</button>
-    <pre id="result"></pre>
+    <h2>Vehicle Room Assignment Lookup</h2>
+    <input type="text" id="name" placeholder="Enter your name">
+    <button onclick="getAssignment()">Lookup</button>
+    <div id="result"></div>
   </body>
 </html>
-
-// Code.gs
-
-const normalize = str => str.trim().toLowerCase();
-const hotelA = {}; // ST GILES Aug 14-15
-const hotelA2 = {}; // ST GILES Aug 16-17
-const hotelARoommates = {}; // Aug 14-15 roommates
-const hotelA2Roommates = {}; // Aug 16-17 roommates
-const hotelB = {}; // Forest Crest
-const hotelBRoommates = {}; // Forest Crest roommates
-
-function parseData(data, target, roommatesMap) {
-  for (let i = 1; i < data.length; i++) {
-    const name = data[i][0];
-    const room = data[i][1];
-    if (name && room && room !== '-') {
-      const key = normalize(name);
-      target[key] = room;
-      if (!roommatesMap[room]) roommatesMap[room] = [];
-      roommatesMap[room].push(name);
-    }
-  }
-}
-
-function parseDataStGilesAug16(data, target, roommatesMap) {
-  for (let i = 1; i < data.length; i++) {
-    const name = data[i][0];
-    const room = data[i][2];
-    if (name && room && room !== '-') {
-      const key = normalize(name);
-      target[key] = room;
-      if (!roommatesMap[room]) roommatesMap[room] = [];
-      roommatesMap[room].push(name);
-    }
-  }
-}
-
-function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile('index');
-}
-
-function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
-}
-
-function getAssignments() {
-  const sheet = SpreadsheetApp.openById('1p0kU54CwA60WAg5PaW8IJpd9jRggkD2_x4I3kHgOh-s');
-  const stgiles = sheet.getSheetByName("ST GILES").getDataRange().getValues();
-  const forest = sheet.getSheetByName("FOREST CREST").getDataRange().getValues();
-  parseData(stgiles, hotelA, hotelARoommates);
-  parseDataStGilesAug16(stgiles, hotelA2, hotelA2Roommates);
-  parseData(forest, hotelB, hotelBRoommates);
-  return { hotelA, hotelA2, hotelARoommates, hotelA2Roommates, hotelB, hotelBRoommates };
-}
-
-function getRoomAssignment(name) {
-  const key = normalize(name);
-  const data = getAssignments();
-  const hotelA = data.hotelA;
-  const hotelA2 = data.hotelA2;
-  const hotelARoommates = data.hotelARoommates;
-  const hotelA2Roommates = data.hotelA2Roommates;
-  const hotelB = data.hotelB;
-  const hotelBRoommates = data.hotelBRoommates;
-
-  let foundKey = Object.keys(hotelA).find(k => k.includes(key));
-  let message = `No assignment found for "${name}".`;
-
-  if (foundKey) {
-    const room1 = hotelA[foundKey];
-    const mates1 = hotelARoommates[room1].filter(n => normalize(n) !== foundKey);
-    const room2 = hotelA2[foundKey];
-    const mates2 = hotelA2Roommates[room2]?.filter(n => normalize(n) !== foundKey) || [];
-    message = `Aug 14-15: ${room1}.`;
-    if (mates1.length > 0) {
-      message += ` Roommate(s): ${mates1.join(", ")}.`;
-    } else {
-      message += ` You have no listed roommates.`;
-    }
-    message += `\n\nAug 16-17: ${room2}.`;
-    if (mates2.length > 0) {
-      message += ` Roommate(s): ${mates2.join(", ")}.`;
-    } else {
-      message += ` You have no listed roommates.`;
-    }
-  } else {
-    foundKey = Object.keys(hotelB).find(k => k.includes(key));
-    if (foundKey) {
-      const room = hotelB[foundKey];
-      const mates = hotelBRoommates[room].filter(n => normalize(n) !== foundKey);
-      message = `Aug 14-15: ${room}.`;
-      if (mates.length > 0) {
-        message += ` Roommate(s): ${mates.join(", ")}.`;
-      } else {
-        message += ` You have no listed roommates.`;
-      }
-    }
-  }
-  return message;
-}
